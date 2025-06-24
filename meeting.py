@@ -1,9 +1,10 @@
 import streamlit as st
-import whisper
+from whisper import load_model, transcribe  # 수정된 임포트
 import google.generativeai as genai
 import tempfile
 import datetime
 import re
+import os
 
 # API 키 설정
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -36,15 +37,23 @@ if 'combined_text' not in st.session_state:
 if 'summary' not in st.session_state:
     st.session_state.summary = ""
 
-# 음성 파일 처리
+# 음성 파일 처리 (수정된 Whisper 사용법)
 def process_audio(audio_file):
     with st.spinner("음성 파일 분석 중..."):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
             tmp.write(audio_file.read())
             tmp_path = tmp.name
         
-        whisper_model = whisper.load_model("base")
-        result = whisper_model.transcribe(tmp_path)
+        # 수정된 Whisper 사용법
+        whisper_model = load_model("base")
+        result = transcribe(whisper_model, tmp_path)
+        
+        # 임시 파일 삭제
+        try:
+            os.unlink(tmp_path)
+        except:
+            pass
+            
         return result["text"]
 
 # 중복 제거 함수
